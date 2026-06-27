@@ -1,194 +1,105 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { useAuth } from '../context/AuthContext';
 
-export default function DepartmentDetail() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [dept, setDept] = useState(null);
-  const [staff, setStaff] = useState([]);
-  const [opd, setOpd] = useState([]);
-  const [ipd, setIpd] = useState([]);
-  const [tab, setTab] = useState('overview');
+const Card = ({ icon, label, value, color, sub }) => (
+  <div style={{ background: '#fff', borderRadius: 14, padding: '20px 22px', boxShadow: '0 1px 3px rgba(0,0,0,.07)', border: '1px solid #e2e8f0', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ position: 'absolute', top: 0, left: 0, width: 4, height: '100%', background: color, borderRadius: '14px 0 0 14px' }} />
+    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+      <div>
+        <div style={{ fontSize: 12, color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: .8, marginBottom: 6 }}>{label}</div>
+        <div style={{ fontSize: 32, fontWeight: 800, color: '#0d2137', lineHeight: 1 }}>{value ?? '—'}</div>
+        {sub && <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>{sub}</div>}
+      </div>
+      <div style={{ width: 48, height: 48, borderRadius: 12, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{icon}</div>
+    </div>
+  </div>
+);
+
+export default function Dashboard() {
+  const { user, isAdmin } = useAuth();
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      api.get(`/departments/${id}`),
-      api.get(`/staff?department=${id}&limit=50`).catch(() => ({ data: { staff: [] } })),
-      api.get(`/opd?department=${id}&limit=10`).catch(() => ({ data: { visits: [] } })),
-      api.get(`/ipd?department=${id}&limit=10`).catch(() => ({ data: { admissions: [] } })),
-    ]).then(([d, s, o, i]) => {
-      setDept(d.data);
-      setStaff(s.data.staff || []);
-      setOpd(o.data.visits || []);
-      setIpd(i.data.admissions || []);
-      setLoading(false);
-    }).catch(() => setLoading(false));
-  }, [id]);
+    if (isAdmin) {
+      api.get('/dashboard').then(r => { setData(r.data); setLoading(false); }).catch(() => setLoading(false));
+    } else { setLoading(false); }
+  }, [isAdmin]);
 
-  if (loading) return <p style={{ color: '#4a6080' }}>Loading...</p>;
-  if (!dept) return <p>Department not found.</p>;
-
-  const tabs = ['overview', 'staff', 'opd', 'ipd'];
-  const tabStyle = (t) => ({
-    padding: '9px 18px', border: 'none', background: tab === t ? '#1a3a5c' : '#f0f3f8',
-    color: tab === t ? '#fff' : '#4a6080', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 13
-  });
-
-  const statuses = { Active: '#27ae60', 'On Leave': '#f39c12', Inactive: '#e74c3c' };
-  const roleColors = { Doctor: '#3498db', Nurse: '#27ae60', Technician: '#9b59b6', Admin: '#c8873a', Pharmacist: '#16a085' };
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
 
   return (
     <div>
-      {/* Back + Header */}
-      <button onClick={() => navigate('/departments')} style={{ background: 'none', border: 'none', color: '#2563a8', cursor: 'pointer', fontSize: 13, marginBottom: 14, fontWeight: 600 }}>
-        ← Back to Departments
-      </button>
-
-      <div style={{ background: dept.color || '#1a3a5c', borderRadius: 12, padding: '22px 24px', color: '#fff', marginBottom: 22 }}>
-        <div style={{ fontSize: 28, marginBottom: 6 }}>🏥</div>
-        <h2 style={{ fontSize: 22, fontWeight: 700 }}>{dept.name}</h2>
-        <p style={{ opacity: 0.8, fontSize: 13, marginTop: 4 }}>{dept.code} {dept.description ? `— ${dept.description}` : ''}</p>
-        <div style={{ display: 'flex', gap: 24, marginTop: 14, flexWrap: 'wrap' }}>
-          {dept.headDoctor && <div style={{ fontSize: 13 }}>👨‍⚕️ {dept.headDoctor}</div>}
-          {dept.location   && <div style={{ fontSize: 13 }}>📍 {dept.location}</div>}
-          {dept.phone      && <div style={{ fontSize: 13 }}>📞 {dept.phone}</div>}
-          {dept.totalBeds > 0 && <div style={{ fontSize: 13 }}>🛏️ {dept.totalBeds} beds</div>}
-        </div>
-      </div>
-
-      {/* Stats Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 12, marginBottom: 22 }}>
-        {[
-          { label: 'Total Staff', value: staff.length },
-          { label: 'Active Staff', value: staff.filter(s => s.status === 'Active').length },
-          { label: "Today's OPD", value: opd.length },
-          { label: 'Current IPD', value: ipd.filter(i => i.status === 'Admitted').length },
-        ].map(m => (
-          <div key={m.label} style={{ background: '#fff', border: '1px solid #e4e9f2', borderRadius: 10, padding: '14px 16px', textAlign: 'center' }}>
-            <div style={{ fontSize: 24, fontWeight: 700, color: '#1a3a5c' }}>{m.value}</div>
-            <div style={{ fontSize: 12, color: '#8a9fb8', marginTop: 3 }}>{m.label}</div>
+      {/* Welcome Banner */}
+      <div style={{ background: 'linear-gradient(135deg, #0d2137 0%, #1e4976 100%)', borderRadius: 16, padding: '26px 28px', marginBottom: 24, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <div style={{ fontSize: 13, color: '#94a3b8', marginBottom: 4 }}>{greeting}</div>
+          <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 6 }}>{user?.name} 👋</h2>
+          <div style={{ fontSize: 13, color: '#64748b', textTransform: 'capitalize' }}>
+            Role: <span style={{ color: '#f59e0b', fontWeight: 700 }}>{user?.role}</span>
+            {user?.departmentName && <span> · {user.departmentName}</span>}
           </div>
-        ))}
+        </div>
+        <div style={{ fontSize: 56, opacity: .2 }}>🏥</div>
       </div>
 
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 18, flexWrap: 'wrap' }}>
-        {tabs.map(t => <button key={t} style={tabStyle(t)} onClick={() => setTab(t)}>{t.toUpperCase()}</button>)}
-      </div>
-
-      {/* Overview Tab */}
-      {tab === 'overview' && (
-        <div style={{ background: '#fff', border: '1px solid #e4e9f2', borderRadius: 12, padding: 20 }}>
-          <h3 style={{ fontSize: 14, fontWeight: 700, marginBottom: 14, color: '#1a3a5c' }}>Department Details</h3>
-          {[
-            ['Name', dept.name], ['Code', dept.code], ['Head Doctor', dept.headDoctor || '—'],
-            ['Location', dept.location || '—'], ['Phone', dept.phone || '—'],
-            ['Total Beds', dept.totalBeds || 0], ['Description', dept.description || '—'],
-          ].map(([k, v]) => (
-            <div key={k} style={{ display: 'flex', gap: 16, padding: '9px 0', borderBottom: '1px solid #f0f3f8' }}>
-              <div style={{ width: 130, fontSize: 13, color: '#8a9fb8', fontWeight: 600, flexShrink: 0 }}>{k}</div>
-              <div style={{ fontSize: 13 }}>{v}</div>
+      {isAdmin && (
+        loading ? (
+          <div style={{ textAlign: 'center', padding: 60, color: '#64748b' }}>Loading dashboard data...</div>
+        ) : data ? (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
+              <Card icon="👥" label="Total Patients"    value={data.totalPatients}    color="#2563eb" sub="Active records" />
+              <Card icon="🩺" label="Today's OPD"       value={data.todayOPD}         color="#10b981" sub="Visits today" />
+              <Card icon="🛏️" label="Current IPD"       value={data.currentIPD}        color="#f59e0b" sub="Admitted patients" />
+              <Card icon="👨‍⚕️" label="Active Staff"     value={data.totalStaff}        color="#8b5cf6" sub="On duty" />
+              <Card icon="🛒" label="Pending POs"       value={data.pendingPOs}        color="#ef4444" sub="Purchase orders" />
+              <Card icon="📋" label="Expired Licenses"  value={data.expiredLicenses}   color="#f97316" sub="Need renewal" />
+              <Card icon="🏢" label="Departments"       value={data.totalDepartments}  color="#0ea5e9" sub="Active" />
             </div>
+
+            {data.recentUpdates?.length > 0 && (
+              <div style={{ background: '#fff', borderRadius: 14, padding: 22, border: '1px solid #e2e8f0' }}>
+                <h3 style={{ fontSize: 14, fontWeight: 800, color: '#0d2137', marginBottom: 16 }}>📢 Recent Hospital Updates</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {data.recentUpdates.map(u => (
+                    <div key={u._id} style={{ padding: '12px 16px', background: '#f8fafc', borderRadius: 10, borderLeft: '3px solid #2563eb' }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 4 }}>{u.title}</div>
+                      <div style={{ fontSize: 12, color: '#64748b' }}>{u.content}</div>
+                      <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 6 }}>By {u.postedByName} · {new Date(u.createdAt).toLocaleDateString('en-IN')}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        ) : <div style={{ textAlign: 'center', padding: 60, color: '#64748b' }}>Could not load dashboard data. Ensure the server is running.</div>
+      )}
+
+      {!isAdmin && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+          {[
+            { icon: '🩺', label: 'OPD Visits', path: '/opd', color: '#10b981', perm: 'canViewOPD' },
+            { icon: '🛏️', label: 'IPD Admissions', path: '/ipd', color: '#f59e0b', perm: 'canViewIPD' },
+            { icon: '👨‍⚕️', label: 'My Staff', path: '/staff', color: '#8b5cf6', perm: 'canViewStaff' },
+            { icon: '🛒', label: 'Purchase Orders', path: '/purchase', color: '#ef4444', perm: 'canViewPurchase' },
+            { icon: '📢', label: 'Updates', path: '/updates', color: '#2563eb' },
+            { icon: '👥', label: 'Patients', path: '/patients', color: '#0ea5e9' },
+          ].filter(i => !i.perm || user?.permissions?.[i.perm]).map(item => (
+            <a href={item.path} key={item.path} style={{
+              background: '#fff', borderRadius: 14, padding: '24px 22px', border: '1px solid #e2e8f0',
+              display: 'flex', alignItems: 'center', gap: 14, boxShadow: '0 1px 3px rgba(0,0,0,.07)',
+              transition: 'transform .15s, box-shadow .15s'
+            }}
+              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,.1)'; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,.07)'; }}
+            >
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: item.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>{item.icon}</div>
+              <span style={{ fontSize: 15, fontWeight: 700, color: '#0d2137' }}>{item.label}</span>
+            </a>
           ))}
-        </div>
-      )}
-
-      {/* Staff Tab */}
-      {tab === 'staff' && (
-        <div style={{ background: '#fff', border: '1px solid #e4e9f2', borderRadius: 12, overflow: 'hidden' }}>
-          <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f3f8' }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1a3a5c' }}>Staff — {dept.name} ({staff.length})</h3>
-          </div>
-          {staff.length === 0 ? (
-            <div style={{ padding: 40, textAlign: 'center', color: '#8a9fb8' }}>No staff records found for this department.</div>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead style={{ background: '#f8f9fb' }}>
-                <tr>{['ID','Name','Role','Qualification','Shift','Status'].map(h => <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#8a9fb8', textTransform: 'uppercase' }}>{h}</th>)}</tr>
-              </thead>
-              <tbody>
-                {staff.map(s => (
-                  <tr key={s._id} style={{ borderTop: '1px solid #f0f3f8' }}>
-                    <td style={{ padding: '10px 14px', fontWeight: 600, color: '#1a3a5c' }}>{s.employeeId}</td>
-                    <td style={{ padding: '10px 14px' }}>{s.name}</td>
-                    <td style={{ padding: '10px 14px' }}>
-                      <span style={{ background: roleColors[s.role] + '22', color: roleColors[s.role] || '#666', padding: '2px 9px', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>{s.role}</span>
-                    </td>
-                    <td style={{ padding: '10px 14px', color: '#4a6080' }}>{s.qualification || '—'}</td>
-                    <td style={{ padding: '10px 14px', color: '#4a6080' }}>{s.shift}</td>
-                    <td style={{ padding: '10px 14px' }}>
-                      <span style={{ background: (statuses[s.status] || '#999') + '22', color: statuses[s.status] || '#999', padding: '2px 9px', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>{s.status}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
-
-      {/* OPD Tab */}
-      {tab === 'opd' && (
-        <div style={{ background: '#fff', border: '1px solid #e4e9f2', borderRadius: 12, overflow: 'hidden' }}>
-          <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f3f8' }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1a3a5c' }}>Recent OPD Visits ({opd.length})</h3>
-          </div>
-          {opd.length === 0 ? (
-            <div style={{ padding: 40, textAlign: 'center', color: '#8a9fb8' }}>No OPD records found.</div>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead style={{ background: '#f8f9fb' }}>
-                <tr>{['Visit ID','Patient','Doctor','Date','Status'].map(h => <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#8a9fb8', textTransform: 'uppercase' }}>{h}</th>)}</tr>
-              </thead>
-              <tbody>
-                {opd.map(v => (
-                  <tr key={v._id} style={{ borderTop: '1px solid #f0f3f8' }}>
-                    <td style={{ padding: '10px 14px', fontWeight: 600, color: '#1a3a5c' }}>{v.visitId}</td>
-                    <td style={{ padding: '10px 14px' }}>{v.patientName || v.patient?.firstName}</td>
-                    <td style={{ padding: '10px 14px' }}>{v.doctor}</td>
-                    <td style={{ padding: '10px 14px', color: '#4a6080' }}>{new Date(v.visitDate).toLocaleDateString('en-IN')}</td>
-                    <td style={{ padding: '10px 14px' }}>
-                      <span style={{ background: v.status === 'Done' ? '#d6f0e4' : '#fef3e2', color: v.status === 'Done' ? '#27ae60' : '#c87a00', padding: '2px 9px', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>{v.status}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      )}
-
-      {/* IPD Tab */}
-      {tab === 'ipd' && (
-        <div style={{ background: '#fff', border: '1px solid #e4e9f2', borderRadius: 12, overflow: 'hidden' }}>
-          <div style={{ padding: '14px 18px', borderBottom: '1px solid #f0f3f8' }}>
-            <h3 style={{ fontSize: 14, fontWeight: 700, color: '#1a3a5c' }}>IPD Admissions ({ipd.length})</h3>
-          </div>
-          {ipd.length === 0 ? (
-            <div style={{ padding: 40, textAlign: 'center', color: '#8a9fb8' }}>No IPD records found.</div>
-          ) : (
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-              <thead style={{ background: '#f8f9fb' }}>
-                <tr>{['Admission ID','Patient','Doctor','Ward/Bed','Admit Date','Status'].map(h => <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#8a9fb8', textTransform: 'uppercase' }}>{h}</th>)}</tr>
-              </thead>
-              <tbody>
-                {ipd.map(a => (
-                  <tr key={a._id} style={{ borderTop: '1px solid #f0f3f8' }}>
-                    <td style={{ padding: '10px 14px', fontWeight: 600, color: '#1a3a5c' }}>{a.admissionId}</td>
-                    <td style={{ padding: '10px 14px' }}>{a.patientName}</td>
-                    <td style={{ padding: '10px 14px' }}>{a.admittingDoctor}</td>
-                    <td style={{ padding: '10px 14px', color: '#4a6080' }}>{a.ward} {a.bedNumber ? `/ Bed ${a.bedNumber}` : ''}</td>
-                    <td style={{ padding: '10px 14px', color: '#4a6080' }}>{new Date(a.admissionDate).toLocaleDateString('en-IN')}</td>
-                    <td style={{ padding: '10px 14px' }}>
-                      <span style={{ background: a.status === 'Admitted' ? '#dce8f8' : '#d6f0e4', color: a.status === 'Admitted' ? '#1a3a5c' : '#27ae60', padding: '2px 9px', borderRadius: 20, fontSize: 11, fontWeight: 600 }}>{a.status}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
         </div>
       )}
     </div>
