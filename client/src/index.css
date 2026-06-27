@@ -3,5 +3,3 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 ::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-thumb{background:#d1d9e6;border-radius:4px}
 a{text-decoration:none;color:inherit}
-button{cursor:pointer;font-family:inherit}
-input,select,textarea{font-family:inherit}

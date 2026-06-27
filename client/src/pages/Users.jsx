@@ -10,14 +10,15 @@ const PERMS = [
 ];
 
 export default function Users() {
+  // ✅ ALL hooks must come first — before any conditional returns
   const { isAdmin } = useAuth();
-  if (!isAdmin) return <Navigate to="/dashboard" replace />;
 
   const [users, setUsers] = useState([]);
   const [depts, setDepts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ name:'', username:'', password:'', department:'', departmentName:'', email:'', phone:'',
+  const [form, setForm] = useState({
+    name:'', username:'', password:'', department:'', departmentName:'', email:'', phone:'',
     permissions: { canViewOPD:false, canViewIPD:false, canViewStaff:false, canViewReports:false, canViewPurchase:false, canPostUpdates:true }
   });
 
@@ -26,7 +27,11 @@ export default function Users() {
       setUsers(u.data); setDepts(d.data); setLoading(false);
     }).catch(() => setLoading(false));
   };
+
   useEffect(load, []);
+
+  // ✅ Guard comes AFTER all hooks
+  if (!isAdmin) return <Navigate to="/dashboard" replace />;
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -127,7 +132,7 @@ export default function Users() {
             <span style={{ fontSize:11, fontWeight:700, padding:'4px 12px', borderRadius:20, background:u.isActive?'#d1fae5':'#fee2e2', color:u.isActive?'#059669':'#ef4444' }}>
               {u.isActive ? 'Active' : 'Inactive'}
             </span>
-            <div style={{ display:'flex', gap:6' }}>
+            <div style={{ display:'flex', gap:6 }}>
               <button onClick={()=>toggle(u._id)} style={{ padding:'6px 12px', border:'1.5px solid #e2e8f0', borderRadius:7, fontSize:12, background:'#fff', cursor:'pointer' }}>
                 {u.isActive ? 'Deactivate' : 'Activate'}
               </button>
