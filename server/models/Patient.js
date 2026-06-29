@@ -35,12 +35,11 @@ const patientSchema = new mongoose.Schema({
   isActive:     { type: Boolean, default: true },
 }, { timestamps: true });
 
-patientSchema.pre('save', async function(next) {
+patientSchema.pre('save', async function() {
   if (!this.uhid) {
     const count = await mongoose.model('Patient').countDocuments();
     this.uhid = 'UH-' + String(10001 + count).padStart(5, '0');
   }
-  next();
 });
 
 module.exports = mongoose.model('Patient', patientSchema);

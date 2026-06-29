@@ -2,7 +2,7 @@ const router = require('express').Router();
 const License = require('../models/License');
 const { protect, isAdmin } = require('../middleware/auth');
 
-router.get('/', protect, async (req, res) => {
+router.get('/', protect, isAdmin, async (req, res) => {
   try { res.json(await License.find().sort('expiryDate')); }
   catch (err) { res.status(500).json({ message: err.message }); }
 });

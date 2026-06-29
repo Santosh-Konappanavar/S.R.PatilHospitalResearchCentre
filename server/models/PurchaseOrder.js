@@ -17,11 +17,10 @@ const poSchema = new mongoose.Schema({
   remarks:        { type: String, default: '' },
   expectedDelivery:{ type: Date },
 }, { timestamps: true });
-poSchema.pre('save', async function(next) {
+poSchema.pre('save', async function() {
   if (!this.poNumber) {
     const count = await mongoose.model('PurchaseOrder').countDocuments();
     this.poNumber = `PO-${String(1001 + count).padStart(4,'0')}`;
   }
-  next();
 });
 module.exports = mongoose.model('PurchaseOrder', poSchema);

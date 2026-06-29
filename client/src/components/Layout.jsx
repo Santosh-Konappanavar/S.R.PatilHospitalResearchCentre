@@ -20,11 +20,22 @@ export default function Layout() {
   const title = TITLES[pathname] || '';
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div className="srp-canvas" style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar />
-      <div style={{ marginLeft: 248, flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div style={{
+        marginLeft: 'var(--sidebar-w)', flex: 1,
+        display: 'flex', flexDirection: 'column',
+        minHeight: '100vh',
+        minWidth: 0,
+      }}>
         <Navbar title={title} />
-        <main style={{ flex: 1, padding: 24, background: '#f0f4f8' }}>
+        <main style={{
+          flex: 1,
+          padding: '28px 32px 48px',
+          maxWidth: 'var(--content-max)',
+          width: '100%',
+          margin: '0 auto',
+        }}>
           <Outlet />
         </main>
       </div>

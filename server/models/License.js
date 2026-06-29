@@ -10,12 +10,11 @@ const licenseSchema = new mongoose.Schema({
   status:      { type: String, enum: ['Active','Pending','Expired'], default: 'Active' },
   addedBy:     { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
-licenseSchema.pre('save', function(next) {
+licenseSchema.pre('save', function() {
   const now = new Date();
   const days90 = 90 * 24 * 60 * 60 * 1000;
   if (this.expiryDate < now) this.status = 'Expired';
   else if ((this.expiryDate - now) < days90) this.status = 'Pending';
   else this.status = 'Active';
-  next();
 });
 module.exports = mongoose.model('License', licenseSchema);

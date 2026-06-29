@@ -44,4 +44,26 @@ router.put('/:id', protect, async (req, res) => {
   catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// Link or update ABHA on an existing patient (no OTP — manual entry).
+router.put('/:id/abha', protect, async (req, res) => {
+  try {
+    const raw = (req.body.abhaNumber || '').toString().trim();
+    if (!raw) return res.status(400).json({ message: 'ABHA number is required' });
+    const digits = raw.replace(/[^0-9]/g, '');
+    if (digits.length !== 14)
+      return res.status(400).json({ message: 'ABHA number must be exactly 14 digits' });
+
+    const dup = await Patient.findOne({ abhaNumber: { $in: [raw, digits] }, _id: { $ne: req.params.id } });
+    if (dup) return res.status(400).json({ message: `ABHA already linked to ${dup.firstName} ${dup.lastName} (${dup.uhid})` });
+
+    const updated = await Patient.findByIdAndUpdate(
+      req.params.id,
+      { abhaNumber: digits, abhaAddress: (req.body.abhaAddress || '').trim() },
+      { new: true }
+    );
+    if (!updated) return res.status(404).json({ message: 'Patient not found' });
+    res.json({ message: 'ABHA linked', patient: updated });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
 module.exports = router;

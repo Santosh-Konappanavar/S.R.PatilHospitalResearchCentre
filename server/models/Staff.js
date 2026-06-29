@@ -17,12 +17,11 @@ const staffSchema = new mongoose.Schema({
   aadhaar:        { type: String, default: '' },
   addedBy:        { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
-staffSchema.pre('save', async function(next) {
+staffSchema.pre('save', async function() {
   if (!this.employeeId) {
     const count = await mongoose.model('Staff').countDocuments();
     const pre = ['D-Group','Security','Housekeeping'].includes(this.role) ? 'DG' : 'EMP';
     this.employeeId = `${pre}-${String(1001 + count).padStart(4,'0')}`;
   }
-  next();
 });
 module.exports = mongoose.model('Staff', staffSchema);

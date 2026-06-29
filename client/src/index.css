@@ -1,5 +1,8 @@
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:#f0f3f8;color:#0f1e30;min-height:100vh}
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-thumb{background:#d1d9e6;border-radius:4px}
-a{text-decoration:none;color:inherit}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('./ui/theme.css');
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; }
+a { text-decoration: none; color: inherit; }
+button { font-family: inherit; cursor: pointer; }
+input, select, textarea { font-family: inherit; }

@@ -1,0 +1,176 @@
+/* SRP Hospital — Editorial Design System
+   Tokens, type, surfaces, motion. Premium navy + gold. */
+
+:root {
+  /* ── Color: primary navy scale ─────────────────────── */
+  --navy-950: #07172a;
+  --navy-900: #0a1f38;
+  --navy-800: #0d2137;
+  --navy-700: #122c47;
+  --navy-600: #163352;
+  --navy-500: #1e4976;
+  --navy-400: #2c5e92;
+  --navy-300: #5b7da9;
+  --navy-200: #94abc7;
+  --navy-100: #cbd9e8;
+
+  /* ── Color: gold accent scale ──────────────────────── */
+  --gold-700: #92651a;
+  --gold-600: #b48428;
+  --gold-500: #d49a2c;
+  --gold-400: #f59e0b;
+  --gold-300: #fbbf24;
+  --gold-200: #fcd97a;
+  --gold-100: #fef3d0;
+
+  /* ── Color: signal (semantic) ──────────────────────── */
+  --signal-green:  #0d9268;
+  --signal-green-bg: #d6f0e4;
+  --signal-blue:   #2563eb;
+  --signal-blue-bg:#dce8f8;
+  --signal-red:    #dc2626;
+  --signal-red-bg: #fee8e8;
+  --signal-orange: #ea580c;
+  --signal-orange-bg:#fef3e2;
+  --signal-purple: #7c3aed;
+  --signal-purple-bg:#ede4fe;
+  --signal-teal:   #0e7490;
+  --signal-teal-bg:#d3f1f7;
+
+  /* ── Surface ───────────────────────────────────────── */
+  --bg: #f4f6fa;
+  --bg-card: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-tinted: #f8fafc;
+  --bg-muted: #eef2f7;
+  --bg-glass: rgba(255, 255, 255, 0.72);
+
+  /* ── Border ────────────────────────────────────────── */
+  --border-soft: #e6ebf2;
+  --border:      #d8dee8;
+  --border-strong: #c2cad6;
+
+  /* ── Text ──────────────────────────────────────────── */
+  --text:       #0f1e30;
+  --text-muted: #4a6080;
+  --text-soft:  #64748b;
+  --text-faint: #94a3b8;
+  --text-on-dark: #e8eef7;
+  --text-on-dark-muted: #94abc7;
+
+  /* ── Radii ─────────────────────────────────────────── */
+  --r-xs: 6px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 22px;
+  --r-2xl: 28px;
+  --r-full: 999px;
+
+  /* ── Spacing scale ─────────────────────────────────── */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-7: 32px;
+  --s-8: 40px;
+  --s-9: 56px;
+
+  /* ── Elevation ─────────────────────────────────────── */
+  --shadow-xs: 0 1px 2px rgba(13, 33, 55, 0.04);
+  --shadow-sm: 0 1px 3px rgba(13, 33, 55, 0.06), 0 2px 8px rgba(13, 33, 55, 0.04);
+  --shadow-md: 0 2px 6px rgba(13, 33, 55, 0.05), 0 8px 24px rgba(13, 33, 55, 0.06);
+  --shadow-lg: 0 6px 16px rgba(13, 33, 55, 0.08), 0 24px 56px rgba(13, 33, 55, 0.12);
+  --shadow-glow: 0 0 0 4px rgba(245, 158, 11, 0.16);
+
+  /* ── Type ──────────────────────────────────────────── */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, system-ui, sans-serif;
+  --font-display: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* ── Motion ────────────────────────────────────────── */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --t-fast: 120ms;
+  --t-base: 180ms;
+  --t-slow: 280ms;
+
+  /* ── Layout ────────────────────────────────────────── */
+  --sidebar-w: 256px;
+  --header-h: 68px;
+  --content-max: 1320px;
+}
+
+/* ── Reset / base ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root { height: 100%; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'cv11', 'ss01', 'ss03';
+  letter-spacing: -0.005em;
+  line-height: 1.5;
+}
+
+a { text-decoration: none; color: inherit; }
+button { font-family: inherit; cursor: pointer; }
+input, select, textarea { font-family: inherit; color: inherit; }
+
+/* ── Subtle texture for the main canvas ──────────────── */
+.srp-canvas {
+  background:
+    radial-gradient(1200px 600px at 0% -10%, rgba(30, 73, 118, 0.05), transparent 60%),
+    radial-gradient(800px 500px at 100% 0%, rgba(245, 158, 11, 0.04), transparent 60%),
+    var(--bg);
+  min-height: 100vh;
+}
+
+/* ── Display type ────────────────────────────────────── */
+.srp-display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+}
+
+.srp-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-soft);
+}
+
+/* ── Smooth focus rings ──────────────────────────────── */
+.srp-focus:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.22);
+}
+
+/* ── Scrollbar ───────────────────────────────────────── */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 8px; border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
+
+/* ── Subtle entrance animation ───────────────────────── */
+@keyframes srp-fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.srp-anim-in { animation: srp-fade-up var(--t-slow) var(--ease-out) both; }
+
+@keyframes srp-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ── Selection ───────────────────────────────────────── */
+::selection { background: rgba(245, 158, 11, 0.22); color: var(--navy-900); }

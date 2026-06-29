@@ -17,6 +17,8 @@ export default function Patients() {
   const [form,setForm]=useState(emptyForm);
   const [saving,setSaving]=useState(false);
   const [viewing,setViewing]=useState(null);
+  const [abhaForm,setAbhaForm]=useState({ abhaNumber:'', abhaAddress:'' });
+  const [linkingAbha,setLinkingAbha]=useState(false);
 
   const load=()=>{
     setLoading(true);
@@ -41,6 +43,22 @@ export default function Patients() {
   };
 
   const bloodColors={'A+':'#e74c3c','A-':'#c0392b','B+':'#3498db','B-':'#2980b9','O+':'#27ae60','O-':'#16a085','AB+':'#9b59b6','AB-':'#8e44ad',Unknown:'#7f8c8d'};
+
+  const linkAbha = async () => {
+    if (!abhaForm.abhaNumber.trim()) return toast.error('Enter an ABHA number');
+    setLinkingAbha(true);
+    try {
+      const r = await api.put(`/patients/${viewing._id}/abha`, abhaForm);
+      toast.success('ABHA linked successfully');
+      setViewing(r.data.patient);
+      setAbhaForm({ abhaNumber: '', abhaAddress: '' });
+      load();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Error linking ABHA');
+    } finally {
+      setLinkingAbha(false);
+    }
+  };
 
   return(
     <div>
@@ -123,6 +141,31 @@ export default function Patients() {
                   <div style={{fontSize:13,color:'#0f1e30'}}>{v}</div>
                 </div>
               ))}
+
+              {/* Link ABHA inline form — shown when patient has no ABHA yet */}
+              {!viewing.abhaNumber && (
+                <div style={{marginTop:16,background:'#e8f4fd',border:'1px solid #b3d7f0',borderRadius:10,padding:14}}>
+                  <div style={{fontSize:13,fontWeight:700,color:'#1a5276',marginBottom:10}}>🆔 Link ABHA (no OTP required)</div>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
+                    <div>
+                      <label style={lbl}>ABHA Number (14-digit)</label>
+                      <input value={abhaForm.abhaNumber}
+                        onChange={e=>setAbhaForm({...abhaForm, abhaNumber:e.target.value})}
+                        placeholder="xx-xxxx-xxxx-xxxx" maxLength={17} style={inp}/>
+                    </div>
+                    <div>
+                      <label style={lbl}>ABHA Address (@abdm)</label>
+                      <input value={abhaForm.abhaAddress}
+                        onChange={e=>setAbhaForm({...abhaForm, abhaAddress:e.target.value})}
+                        placeholder="name@abdm" style={inp}/>
+                    </div>
+                  </div>
+                  <button onClick={linkAbha} disabled={linkingAbha}
+                    style={{padding:'8px 18px',background:'#2563eb',color:'#fff',border:'none',borderRadius:8,fontSize:13,fontWeight:700,cursor:'pointer'}}>
+                    {linkingAbha ? 'Saving…' : 'Save ABHA'}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

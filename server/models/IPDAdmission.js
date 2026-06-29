@@ -21,12 +21,11 @@ const ipdSchema = new mongoose.Schema({
   dischargeSummary: { type: String, default: '' },
   registeredBy:   { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
-ipdSchema.pre('save', async function(next) {
+ipdSchema.pre('save', async function() {
   if (!this.admissionId) {
     const count = await mongoose.model('IPDAdmission').countDocuments();
     const d = new Date();
     this.admissionId = `IPD-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}-${String(count+1).padStart(4,'0')}`;
   }
-  next();
 });
 module.exports = mongoose.model('IPDAdmission', ipdSchema);

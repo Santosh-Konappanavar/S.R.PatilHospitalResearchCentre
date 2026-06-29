@@ -22,12 +22,11 @@ const opdSchema = new mongoose.Schema({
   status:        { type: String, enum: ['Waiting','In-Consultation','Done','Cancelled'], default: 'Waiting' },
   registeredBy:  { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
-opdSchema.pre('save', async function(next) {
+opdSchema.pre('save', async function() {
   if (!this.visitId) {
     const count = await mongoose.model('OPDVisit').countDocuments();
     const d = new Date();
     this.visitId = `OPD-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}-${String(count+1).padStart(4,'0')}`;
   }
-  next();
 });
 module.exports = mongoose.model('OPDVisit', opdSchema);

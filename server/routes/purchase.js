@@ -1,34 +1,63 @@
 const router = require('express').Router();
 const PurchaseOrder = require('../models/PurchaseOrder');
-const { protect, isAdmin } = require('../middleware/auth');
+const { protect, isAdmin, canCreatePurchase } = require('../middleware/auth');
+const { renderPOPDF } = require('../utils/pdf');
+
+// Helpers — scope a query based on the user's role.
+const scopeFilter = (req) => {
+  if (req.user.role === 'department') return { department: req.user.department?._id };
+  return {};
+};
 
 router.get('/', protect, async (req, res) => {
   try {
-    if (req.user.role==='department' && !req.user.permissions.canViewPurchase)
+    if (req.user.role === 'department' && !req.user.permissions?.canViewPurchase)
       return res.status(403).json({ message: 'No access' });
-    const { status, page=1, limit=20 } = req.query;
-    let q = {};
+    const { status, page = 1, limit = 20 } = req.query;
+    const q = { ...scopeFilter(req) };
     if (status) q.status = status;
-    if (req.user.role==='department') q.department = req.user.department?._id;
     const [pos, total] = await Promise.all([
-      PurchaseOrder.find(q).sort('-createdAt').skip((page-1)*limit).limit(+limit),
-      PurchaseOrder.countDocuments(q)
+      PurchaseOrder.find(q).sort('-createdAt').skip((page - 1) * limit).limit(+limit),
+      PurchaseOrder.countDocuments(q),
     ]);
-    res.json({ pos, total, pages: Math.ceil(total/limit) });
+    res.json({ pos, total, pages: Math.ceil(total / limit) });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-router.post('/', protect, async (req, res) => {
+// JSON dump (full filtered list, no pagination). Same scoping as GET /.
+router.get('/export.json', protect, async (req, res) => {
   try {
-    const po = await PurchaseOrder.create({ ...req.body, requestedBy: req.user._id, requestedByName: req.user.name });
+    if (req.user.role === 'department' && !req.user.permissions?.canViewPurchase)
+      return res.status(403).json({ message: 'No access' });
+    const { status } = req.query;
+    const q = { ...scopeFilter(req) };
+    if (status) q.status = status;
+    const pos = await PurchaseOrder.find(q).sort('-createdAt');
+    res.setHeader('Content-Disposition', `attachment; filename="purchase-orders-${new Date().toISOString().slice(0, 10)}.json"`);
+    res.json({ exportedAt: new Date().toISOString(), count: pos.length, purchaseOrders: pos });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// Create — admin, chairman, or accountant.
+router.post('/', protect, canCreatePurchase, async (req, res) => {
+  try {
+    const po = await PurchaseOrder.create({
+      ...req.body,
+      requestedBy: req.user._id,
+      requestedByName: req.user.name,
+    });
     res.status(201).json(po);
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
+// Approve / reject — admin or chairman only.
 router.put('/:id/approve', protect, isAdmin, async (req, res) => {
   try {
     const po = await PurchaseOrder.findByIdAndUpdate(req.params.id, {
-      status: 'Approved', approvedBy: req.user._id, approvedByName: req.user.name, approvedAt: new Date()
+      status: 'Approved',
+      approvedBy: req.user._id,
+      approvedByName: req.user.name,
+      approvedAt: new Date(),
     }, { new: true });
     res.json(po);
   } catch (err) { res.status(500).json({ message: err.message }); }
@@ -44,5 +73,18 @@ router.put('/:id', protect, isAdmin, async (req, res) => {
   catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-module.exports = router;
+// Download PDF — auth-protected, scope-checked.
+router.get('/:id/pdf', protect, async (req, res) => {
+  try {
+    if (req.user.role === 'department' && !req.user.permissions?.canViewPurchase)
+      return res.status(403).json({ message: 'No access' });
+    const po = await PurchaseOrder.findById(req.params.id);
+    if (!po) return res.status(404).json({ message: 'Not found' });
+    if (req.user.role === 'department' &&
+        String(po.department) !== String(req.user.department?._id))
+      return res.status(403).json({ message: 'No access to this PO' });
+    renderPOPDF(po, res);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
 
+module.exports = router;
